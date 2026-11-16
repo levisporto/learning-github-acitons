@@ -1,0 +1,33 @@
+name: Hourly motivation
+
+on:
+  schedule:
+    # GitHub cron is in UTC. Fortaleza is UTC-3 all year (no daylight saving),
+    # so these two lines cover 06:17 to 22:17 local time, once per hour.
+    # Minute 17 avoids the top-of-hour rush, when GitHub delays scheduled runs.
+    - cron: "17 9-23 * * *"
+    - cron: "17 0-1 * * *"
+  workflow_dispatch: # lets you press "Run workflow" to test by hand
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hourly-motivation
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send Telegram message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TZ_NAME: America/Fortaleza
+          ACTIVE_START: "6"
+          ACTIVE_END: "22"
+        run: python3 send.py
